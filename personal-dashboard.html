@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Space</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f11;
+    --surface: #18181c;
+    --border: #2a2a30;
+    --accent: #7c6aff;
+    --accent2: #b8a9ff;
+    --text: #e8e6f0;
+    --muted: #6b6880;
+    --tag-done: #2a4a3a;
+    --tag-done-text: #6fcba0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  header {
+    padding: 20px 28px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--accent2);
+    letter-spacing: 0.08em;
+  }
+
+  .date-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* Tab nav */
+  .tabs {
+    display: flex;
+    padding: 0 28px;
+    border-bottom: 1px solid var(--border);
+    gap: 0;
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    padding: 14px 20px 12px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    margin-bottom: -1px;
+  }
+
+  .tab-btn.active {
+    color: var(--accent2);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-btn:hover:not(.active) {
+    color: var(--text);
+  }
+
+  /* Main layout */
+  .main {
+    flex: 1;
+    padding: 24px 28px;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: flex; flex-direction: column; gap: 20px; }
+
+  /* Schedule panel */
+  .section-title {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .input-field {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-field:focus { border-color: var(--accent); }
+  .input-field::placeholder { color: var(--muted); }
+
+  .input-field.wide { flex: 1; }
+  .input-field.date { width: 160px; font-family: 'DM Mono', monospace; font-size: 12px; }
+  .input-field.time { width: 100px; font-family: 'DM Mono', monospace; font-size: 12px; }
+
+  .btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { opacity: 0.85; }
+  .btn.ghost {
+    background: var(--surface);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn.ghost:hover { color: var(--text); border-color: var(--muted); }
+
+  /* Event list */
+  .event-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .event-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.2s;
+  }
+
+  .event-item:hover { border-color: #3a3a44; }
+  .event-item.done { opacity: 0.45; }
+
+  .event-check {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .event-item.done .event-check {
+    background: var(--tag-done);
+    border-color: var(--tag-done-text);
+  }
+
+  .event-check::after {
+    content: '✓';
+    font-size: 10px;
+    color: var(--tag-done-text);
+    display: none;
+  }
+
+  .event-item.done .event-check::after { display: block; }
+
+  .event-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    min-width: 90px;
+  }
+
+  .event-title {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .event-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .del-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .event-item:hover .del-btn { opacity: 1; }
+  .del-btn:hover { color: #ff6b6b; }
+
+  .empty-hint {
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 32px 0;
+    font-style: italic;
+  }
+
+  /* Journal panel */
+  .journal-layout {
+    display: flex;
+    gap: 20px;
+    height: calc(100vh - 180px);
+    min-height: 400px;
+  }
+
+  .journal-sidebar {
+    width: 200px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .entry-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .entry-item:hover { border-color: #3a3a44; }
+  .entry-item.active { border-color: var(--accent); background: #1e1c2e; }
+
+  .entry-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+
+  .entry-preview {
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Chat area */
+  .chat-area {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .chat-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .chat-title {
+    font-size: 13px;
+    color: var(--accent2);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .new-entry-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .new-entry-btn:hover { color: var(--text); border-color: var(--muted); }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .msg {
+    display: flex;
+    gap: 10px;
+    max-width: 85%;
+  }
+
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+
+  .msg-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .msg.user .msg-avatar { background: var(--accent); }
+
+  .msg-bubble {
+    background: #222228;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+  }
+
+  .msg.user .msg-bubble {
+    background: #2a264a;
+    border-color: #4a3f80;
+  }
+
+  .typing-indicator {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 6px 0;
+  }
+
+  .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--muted);
+    animation: bounce 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-5px); }
+  }
+
+  .chat-input-row {
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+
+  .chat-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    padding: 10px 14px;
+    outline: none;
+    resize: none;
+    height: 42px;
+    max-height: 120px;
+    transition: border-color 0.2s;
+    line-height: 1.5;
+  }
+
+  .chat-input:focus { border-color: var(--accent); }
+
+  .send-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    width: 42px;
+    height: 42px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover { opacity: 0.85; }
+  .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* Memo panel */
+  .memo-area {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: calc(100vh - 180px);
+  }
+
+  .memo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .memo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .memo-card:hover { border-color: #3a3a44; }
+
+  .memo-card-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .memo-card-body {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .memo-card-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: #3a3a50;
+    margin-top: auto;
+  }
+
+  .memo-del {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    opacity: 0;
+    font-size: 13px;
+    transition: opacity 0.2s;
+  }
+
+  .memo-card:hover .memo-del { opacity: 1; }
+  .memo-del:hover { color: #ff6b6b; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    width: 480px;
+    max-width: 95vw;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .modal-title-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 8px 0;
+    outline: none;
+    width: 100%;
+  }
+
+  .modal-title-input::placeholder { color: var(--muted); }
+
+  .modal-body-input {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 1.7;
+    outline: none;
+    resize: none;
+    width: 100%;
+    min-height: 160px;
+  }
+
+  .modal-body-input::placeholder { color: var(--muted); }
+
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 4px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Timer bar */
+  .timer-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 18px;
+    border-bottom: 1px solid var(--border);
+    background: #141418;
+  }
+
+  .timer-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .timer-track {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .timer-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 1s linear, background 0.5s;
+    width: 0%;
+  }
+
+  .timer-fill.warning { background: #ffaa44; }
+  .timer-fill.ending { background: #ff6b6b; }
+
+  .timer-clock {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent2);
+    min-width: 38px;
+    text-align: right;
+  }
+
+  .timer-set {
+    display: flex;
+    gap: 4px;
+  }
+
+  .timer-chip {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--muted);
+    font-size: 11px;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .timer-chip:hover, .timer-chip.selected { 
+    border-color: var(--accent);
+    color: var(--accent2);
+    background: #1e1c2e;
+  }
+
+  /* Wrap-up banner */
+  .wrapup-banner {
+    margin: 0 16px 12px;
+    background: linear-gradient(135deg, #1e1c2e, #221e3a);
+    border: 1px solid #4a3f80;
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .wrapup-banner.show { display: flex; }
+
+  .wrapup-text {
+    font-size: 13px;
+    color: var(--accent2);
+    line-height: 1.6;
+  }
+
+  .wrapup-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .wrapup-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 12px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .wrapup-btn:hover { opacity: 0.85; }
+
+  .wrapup-btn.ghost {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .wrapup-btn.ghost:hover { color: var(--text); }
+
+  /* Furikaeri panel */
+  .furikaeri-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .furikaeri-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .furikaeri-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .furikaeri-month {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--accent2);
+  }
+
+  .furikaeri-meta {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .furikaeri-chevron {
+    color: var(--muted);
+    font-size: 11px;
+    transition: transform 0.2s;
+  }
+
+  .furikaeri-card.open .furikaeri-chevron { transform: rotate(180deg); }
+
+  .furikaeri-body {
+    display: none;
+    padding: 18px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+
+  .furikaeri-card.open .furikaeri-body { display: block; }
+
+  .furikaeri-generating {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .furikaeri-empty {
+    text-align: center;
+    padding: 48px 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.9;
+  }
+
+  .furikaeri-not-yet {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.9;
+  }
+
+  .furikaeri-not-yet strong {
+    display: block;
+    color: var(--accent2);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  @media (max-width: 600px) {
+    header, .tabs, .main { padding-left: 16px; padding-right: 16px; }
+    .journal-layout { flex-direction: column; height: auto; }
+    .journal-sidebar { width: 100%; flex-direction: row; overflow-x: auto; flex-shrink: 0; }
+    .entry-item { min-width: 130px; }
+    .chat-area { height: 400px; }
+    .add-row { flex-wrap: wrap; }
+    .input-field.date, .input-field.time { flex: 1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo">// my space</span>
+  <span class="date-display" id="headerDate"></span>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('schedule')">スケジュール</button>
+  <button class="tab-btn" onclick="switchTab('journal')">ジャーナル</button>
+  <button class="tab-btn" onclick="switchTab('memo')">メモ</button>
+  <button class="tab-btn" onclick="switchTab('furikaeri')">ふりかえり</button>
+</div>
+
+<div class="main">
+
+  <!-- SCHEDULE PANEL -->
+  <div class="panel active" id="panel-schedule">
+    <div>
+      <div class="section-title">予定を追加</div>
+      <div class="add-row">
+        <input class="input-field wide" id="evTitle" type="text" placeholder="タイトル" />
+        <input class="input-field date" id="evDate" type="date" />
+        <input class="input-field time" id="evTime" type="time" />
+        <button class="btn" onclick="addEvent()">追加</button>
+      </div>
+    </div>
+    <div>
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>今後の予定</span>
+        <span id="gcalBadge" style="display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;color:var(--tag-done-text);background:var(--tag-done);padding:3px 8px;border-radius:4px;">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+          Google カレンダー同期済み
+        </span>
+      </div>
+      <div class="event-list" id="eventList">
+        <div class="empty-hint">予定がありません</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JOURNAL PANEL -->
+  <div class="panel" id="panel-journal">
+    <div class="journal-layout">
+      <div class="journal-sidebar" id="journalSidebar">
+        <div style="color:var(--muted);font-size:12px;padding:8px 0;">エントリなし</div>
+      </div>
+      <div class="chat-area">
+        <div class="chat-header">
+          <span class="chat-title" id="chatTitle">— 新しいエントリ —</span>
+          <button class="new-entry-btn" onclick="newJournalEntry()">＋ 新しいエントリ</button>
+        </div>
+        <!-- Timer bar -->
+        <div class="timer-bar" id="timerBar">
+          <span class="timer-label">時間</span>
+          <div class="timer-set">
+            <button class="timer-chip" onclick="setTimer(5)">5分</button>
+            <button class="timer-chip selected" onclick="setTimer(15)">15分</button>
+            <button class="timer-chip" onclick="setTimer(30)">30分</button>
+          </div>
+          <div class="timer-track"><div class="timer-fill" id="timerFill"></div></div>
+          <span class="timer-clock" id="timerClock">--:--</span>
+        </div>
+        <div class="messages" id="messages"></div>
+        <!-- Wrap-up banner -->
+        <div class="wrapup-banner" id="wrapupBanner">
+          <div class="wrapup-text" id="wrapupText"></div>
+          <div class="wrapup-actions">
+            <button class="wrapup-btn ghost" onclick="extendSession()">もう少し続ける</button>
+            <button class="wrapup-btn" onclick="endSession()">今日はここまで</button>
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <textarea class="chat-input" id="chatInput" placeholder="今日はどうでしたか？" rows="1"
+            onkeydown="handleChatKey(event)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEMO PANEL -->
+  <div class="panel" id="panel-memo">
+    <div class="add-row" style="margin-bottom:0">
+      <button class="btn" onclick="openMemoModal(null)">＋ 新しいメモ</button>
+    </div>
+    <div class="memo-grid" id="memoGrid">
+      <div class="empty-hint" style="grid-column:1/-1">メモがありません</div>
+    </div>
+  </div>
+
+  <!-- FURIKAERI PANEL -->
+  <div class="panel" id="panel-furikaeri">
+    <div id="furikaeriContent"></div>
+  </div>
+
+</div>
+
+<!-- Memo Modal -->
+<div class="modal-overlay" id="memoModal">
+  <div class="modal">
+    <input class="modal-title-input" id="memoTitle" placeholder="タイトル" />
+    <textarea class="modal-body-input" id="memoBody" placeholder="内容を書いてください…"></textarea>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeMemoModal()">キャンセル</button>
+      <button class="btn" onclick="saveMemo()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+// Google Calendar events (fetched and embedded at build time)
+const gcalEvents = [
+  { id: 'gcal_60qj0oj470sjib9p6lj3gb9k6tj36b9o6tj3cbb671gmccb66crj4p1jcg', title: '渋谷高野美容医院', date: '2026-06-27', time: '10:30', done: false, gcal: true, location: '東京都渋谷区道玄坂2-25-6 ホリウチビル6階' },
+  { id: 'gcal_74t4mnrk6ehfernu8lc5n1pqbk_20260703', title: '雇用統計', date: '2026-07-03', time: '21:00', done: false, gcal: true },
+  { id: 'gcal_64qjgcj46lj3gbb374p6cb9kccsm4b9p6opj6b9o6oq64ob16sqm8p34cc', title: '歯医者', date: '2026-07-09', time: '09:30', done: false, gcal: true },
+];
+
+let events = JSON.parse(localStorage.getItem('ms_events') || '[]');
+
+// Merge gcalEvents: add any not already present
+gcalEvents.forEach(ge => {
+  if (!events.find(e => e.id === ge.id)) events.push(ge);
+});
+events.sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+let journals = JSON.parse(localStorage.getItem('ms_journals') || '[]');
+let memos = JSON.parse(localStorage.getItem('ms_memos') || '[]');
+let currentJournalId = null;
+let currentMemoId = null;
+let isTyping = false;
+
+// ── Helpers ────────────────────────────────────────────
+function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function formatDate(d) {
+  const dt = new Date(d);
+  return `${dt.getFullYear()}/${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')}`;
+}
+
+function setHeaderDate() {
+  const now = new Date();
+  const days = ['日','月','火','水','木','金','土'];
+  document.getElementById('headerDate').textContent =
+    `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} (${days[now.getDay()]})`;
+}
+
+// ── Tab ────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'journal' && !currentJournalId) newJournalEntry();
+  if (name === 'furikaeri') renderFurikaeri();
+}
+
+// ── SCHEDULE ───────────────────────────────────────────
+function addEvent() {
+  const title = document.getElementById('evTitle').value.trim();
+  const date = document.getElementById('evDate').value;
+  const time = document.getElementById('evTime').value;
+  if (!title) return;
+  events.push({ id: uid(), title, date, time, done: false });
+  events.sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+  save('ms_events', events);
+  document.getElementById('evTitle').value = '';
+  renderEvents();
+}
+
+function toggleEvent(id) {
+  const ev = events.find(e => e.id === id);
+  if (ev) { ev.done = !ev.done; save('ms_events', events); renderEvents(); }
+}
+
+function deleteEvent(id) {
+  events = events.filter(e => e.id !== id);
+  save('ms_events', events);
+  renderEvents();
+}
+
+function renderEvents() {
+  const list = document.getElementById('eventList');
+  if (!events.length) { list.innerHTML = '<div class="empty-hint">予定がありません</div>'; return; }
+  list.innerHTML = events.map(e => `
+    <div class="event-item ${e.done ? 'done' : ''}">
+      <div class="event-check" onclick="toggleEvent('${e.id}')"></div>
+      <span class="event-time">${e.time || '--:--'}</span>
+      <span class="event-title">
+        ${e.title}
+        ${e.gcal ? '<span style="font-size:10px;font-family:DM Mono,monospace;color:var(--tag-done-text);background:var(--tag-done);padding:2px 6px;border-radius:3px;margin-left:6px;">GCal</span>' : ''}
+        ${e.location ? `<span style="display:block;font-size:11px;color:var(--muted);margin-top:2px;">📍 ${e.location}</span>` : ''}
+      </span>
+      <span class="event-date">${e.date ? formatDate(e.date) : ''}</span>
+      ${e.gcal ? '' : `<button class="del-btn" onclick="deleteEvent('${e.id}')">✕</button>`}
+    </div>
+  `).join('');
+}
+
+// ── JOURNAL ────────────────────────────────────────────
+const SYSTEM_PROMPT = `あなたは共感力の高いジャーナリングパートナーです。
+ユーザーが自分の思考・感情・日々の出来事を整理できるよう、温かく聞き役に徹してください。
+指示や提案より、まず「聞く」「受け止める」を優先してください。
+日本語で、自然な会話調で返答してください。返答は3〜5文以内が理想的です。
+必要であれば、振り返りを深めるための質問を一つだけ添えてください。
+
+【重要】反芻思考（同じ悩みをぐるぐると繰り返すこと）の兆候が見えたら、
+やさしく別の角度から問いかけるか、一度気持ちを置いて休むことを勧めてください。`;
+
+const WRAPUP_PROMPT = `あなたはジャーナリングパートナーです。
+セッションが設定時間に近づきました。
+これまでの会話の流れを踏まえて、今日のジャーナリングをやさしく締めくくる短いメッセージを書いてください。
+・今日話してくれたことへの感謝や労いを一言
+・もし印象的なテーマがあればそれを一文で反映
+・「今日はここまでにしておきましょうか」という自然な締めくくり提案
+3〜4文以内、押しつけがましくなく、ほっとする温かいトーンで。`;
+
+// Timer state
+let timerDuration = 15 * 60; // seconds, default 15min
+let timerElapsed = 0;
+let timerInterval = null;
+let timerStarted = false;
+let wrapupShown = false;
+
+function setTimer(minutes) {
+  timerDuration = minutes * 60;
+  timerElapsed = 0;
+  wrapupShown = false;
+  document.querySelectorAll('.timer-chip').forEach(c => c.classList.remove('selected'));
+  event.target.classList.add('selected');
+  document.getElementById('timerFill').style.width = '0%';
+  document.getElementById('timerFill').className = 'timer-fill';
+  document.getElementById('timerClock').textContent = `${String(minutes).padStart(2,'0')}:00`;
+  document.getElementById('wrapupBanner').classList.remove('show');
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; timerStarted = false; }
+}
+
+function startTimerIfNeeded() {
+  if (timerStarted) return;
+  timerStarted = true;
+  timerInterval = setInterval(tickTimer, 1000);
+}
+
+function tickTimer() {
+  timerElapsed++;
+  const remaining = timerDuration - timerElapsed;
+  const pct = (timerElapsed / timerDuration) * 100;
+
+  // Clock display (remaining)
+  const m = Math.max(0, Math.floor(remaining / 60));
+  const s = Math.max(0, remaining % 60);
+  document.getElementById('timerClock').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+  // Fill bar
+  const fill = document.getElementById('timerFill');
+  fill.style.width = Math.min(100, pct) + '%';
+  if (pct >= 90) fill.className = 'timer-fill ending';
+  else if (pct >= 70) fill.className = 'timer-fill warning';
+
+  // Wrap-up trigger: at 80% of time
+  if (!wrapupShown && pct >= 80) {
+    wrapupShown = true;
+    showWrapup();
+  }
+
+  if (remaining <= 0) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+async function showWrapup() {
+  const entry = journals.find(j => j.id === currentJournalId);
+  if (!entry || entry.messages.length === 0) return;
+
+  const apiMsgs = entry.messages.map(m => ({ role: m.role, content: m.content }));
+  apiMsgs.push({ role: 'user', content: '（セッション時間がそろそろ終わります。締めくくりのメッセージをお願いします）' });
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: WRAPUP_PROMPT,
+        messages: apiMsgs
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '今日はここまでにしておきましょうか。よく向き合えましたね。';
+    document.getElementById('wrapupText').textContent = text;
+    document.getElementById('wrapupBanner').classList.add('show');
+    document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+  } catch(e) {
+    document.getElementById('wrapupText').textContent = 'そろそろ今日はここまでにしておきましょうか。今日も向き合ってくれてありがとう。';
+    document.getElementById('wrapupBanner').classList.add('show');
+  }
+}
+
+function extendSession() {
+  // Add 10 more minutes
+  timerDuration += 10 * 60;
+  wrapupShown = false;
+  document.getElementById('wrapupBanner').classList.remove('show');
+}
+
+function endSession() {
+  const entry = journals.find(j => j.id === currentJournalId);
+  if (entry) {
+    const wrapText = document.getElementById('wrapupText').textContent;
+    addBotMessage(entry, wrapText + '\n\nお疲れさまでした。またいつでも話しかけてね 🌙');
+  }
+  document.getElementById('wrapupBanner').classList.remove('show');
+  document.getElementById('chatInput').disabled = true;
+  document.getElementById('sendBtn').disabled = true;
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function newJournalEntry() {
+  // Reset timer
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = null; timerStarted = false; timerElapsed = 0; wrapupShown = false;
+  document.getElementById('timerFill').style.width = '0%';
+  document.getElementById('timerFill').className = 'timer-fill';
+  const defMin = timerDuration / 60;
+  document.getElementById('timerClock').textContent = `${String(defMin).padStart(2,'0')}:00`;
+  document.getElementById('wrapupBanner').classList.remove('show');
+  document.getElementById('chatInput').disabled = false;
+  document.getElementById('sendBtn').disabled = false;
+
+  const today = new Date().toLocaleDateString('ja-JP', {month:'long', day:'numeric', weekday:'short'});
+  const entry = { id: uid(), date: new Date().toISOString(), messages: [], title: today };
+  journals.unshift(entry);
+  save('ms_journals', journals);
+  loadJournalEntry(entry.id);
+  renderSidebar();
+}
+
+function loadJournalEntry(id) {
+  currentJournalId = id;
+  const entry = journals.find(j => j.id === id);
+  if (!entry) return;
+  document.getElementById('chatTitle').textContent = entry.title;
+  renderMessages(entry.messages);
+  renderSidebar();
+  if (entry.messages.length === 0) {
+    const h = new Date().getHours();
+    const g = h < 12 ? 'おはよう' : h < 18 ? 'こんにちは' : 'おつかれさま';
+    addBotMessage(entry, `${g}。今、感じてること、考えてることを教えて。`);
+  }
+}
+
+function renderSidebar() {
+  const sb = document.getElementById('journalSidebar');
+  if (!journals.length) { sb.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0;">エントリなし</div>'; return; }
+  sb.innerHTML = journals.map(j => `
+    <div class="entry-item ${j.id === currentJournalId ? 'active' : ''}" onclick="loadJournalEntry('${j.id}')">
+      <div class="entry-date">${formatDate(j.date)}</div>
+      <div class="entry-preview">${j.title}</div>
+    </div>
+  `).join('');
+}
+
+function renderMessages(msgs) {
+  const el = document.getElementById('messages');
+  el.innerHTML = msgs.map(m => `
+    <div class="msg ${m.role === 'user' ? 'user' : ''}">
+      <div class="msg-avatar">${m.role === 'user' ? '👤' : '✦'}</div>
+      <div class="msg-bubble">${m.content}</div>
+    </div>
+  `).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function addBotMessage(entry, text) {
+  entry.messages.push({ role: 'assistant', content: text });
+  save('ms_journals', journals);
+  renderMessages(entry.messages);
+}
+
+function showTyping() {
+  const el = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg'; div.id = 'typing';
+  div.innerHTML = `<div class="msg-avatar">✦</div><div class="msg-bubble"><div class="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+async function sendMessage() {
+  if (isTyping) return;
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const entry = journals.find(j => j.id === currentJournalId);
+  if (!entry) return;
+
+  entry.messages.push({ role: 'user', content: text });
+  save('ms_journals', journals);
+  renderMessages(entry.messages);
+  input.value = '';
+  input.style.height = '42px';
+
+  startTimerIfNeeded();
+  isTyping = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyping();
+
+  // Build API messages
+  const apiMsgs = entry.messages.map(m => ({ role: m.role, content: m.content }));
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: apiMsgs
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.find(b => b.type === 'text')?.text || '…';
+    removeTyping();
+    addBotMessage(entry, reply);
+  } catch(e) {
+    removeTyping();
+    addBotMessage(entry, '接続エラーが発生しました。もう一度お試しください。');
+  }
+
+  isTyping = false;
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+  // Auto-resize
+  const ta = e.target;
+  ta.style.height = '42px';
+  ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+}
+
+// ── MEMO ───────────────────────────────────────────────
+function openMemoModal(id) {
+  currentMemoId = id;
+  const memo = id ? memos.find(m => m.id === id) : null;
+  document.getElementById('memoTitle').value = memo ? memo.title : '';
+  document.getElementById('memoBody').value = memo ? memo.body : '';
+  document.getElementById('memoModal').classList.add('open');
+  setTimeout(() => document.getElementById('memoTitle').focus(), 50);
+}
+
+function closeMemoModal() {
+  document.getElementById('memoModal').classList.remove('open');
+  currentMemoId = null;
+}
+
+function saveMemo() {
+  const title = document.getElementById('memoTitle').value.trim() || '無題';
+  const body = document.getElementById('memoBody').value.trim();
+  if (currentMemoId) {
+    const m = memos.find(m => m.id === currentMemoId);
+    if (m) { m.title = title; m.body = body; m.updated = new Date().toISOString(); }
+  } else {
+    memos.unshift({ id: uid(), title, body, created: new Date().toISOString(), updated: new Date().toISOString() });
+  }
+  save('ms_memos', memos);
+  renderMemos();
+  closeMemoModal();
+}
+
+function deleteMemo(id, e) {
+  e.stopPropagation();
+  memos = memos.filter(m => m.id !== id);
+  save('ms_memos', memos);
+  renderMemos();
+}
+
+function renderMemos() {
+  const grid = document.getElementById('memoGrid');
+  if (!memos.length) { grid.innerHTML = '<div class="empty-hint" style="grid-column:1/-1">メモがありません</div>'; return; }
+  grid.innerHTML = memos.map(m => `
+    <div class="memo-card" onclick="openMemoModal('${m.id}')">
+      <button class="memo-del" onclick="deleteMemo('${m.id}', event)">✕</button>
+      <div class="memo-card-title">${m.title}</div>
+      <div class="memo-card-body">${m.body.replace(/\n/g,'<br>')}</div>
+      <div class="memo-card-date">${formatDate(m.updated || m.created)}</div>
+    </div>
+  `).join('');
+}
+
+// Close modal on overlay click
+document.getElementById('memoModal').addEventListener('click', function(e) {
+  if (e.target === this) closeMemoModal();
+});
+
+// ── FURIKAERI ──────────────────────────────────────────
+let summaries = JSON.parse(localStorage.getItem('ms_summaries') || '{}');
+// { 'YYYY-MM': { text, generatedAt } }
+
+function getMonthKey(isoDate) {
+  return isoDate.slice(0, 7); // 'YYYY-MM'
+}
+
+function formatMonthLabel(key) {
+  const [y, m] = key.split('-');
+  return `${y}年${parseInt(m)}月`;
+}
+
+// Group journal entries by month
+function groupJournalsByMonth() {
+  const groups = {};
+  journals.forEach(j => {
+    const key = getMonthKey(j.date);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(j);
+  });
+  return groups;
+}
+
+// Check if today is month-start period (day 1–3) to allow summary generation
+function isMonthStartPeriod() {
+  return new Date().getDate() <= 3;
+}
+
+function getPrevMonthKey() {
+  const now = new Date();
+  const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  return `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function getCurrentMonthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+async function generateSummary(monthKey, entries) {
+  const el = document.getElementById(`summary-body-${monthKey}`);
+  if (!el) return;
+  el.innerHTML = '<div class="furikaeri-generating"><div class="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span>要約を生成中…</span></div>';
+  document.getElementById(`furikaeri-card-${monthKey}`).classList.add('open');
+
+  // Build content from all messages in this month
+  const allText = entries.map(e => {
+    const msgs = e.messages.filter(m => m.role === 'user').map(m => m.content).join('\n');
+    return `【${e.title}】\n${msgs}`;
+  }).join('\n\n');
+
+  const prompt = `以下は${formatMonthLabel(monthKey)}のジャーナル記録です。\n\n${allText}\n\n---\nこの月を通じて、この人が考えていたこと・感じていたこと・繰り返し出てきたテーマを、温かく客観的にまとめてください。\n・200〜300字程度\n・箇条書きではなく、ひとつながりの文章で\n・本人が読んで「そうそう、こういう月だったな」と感じられるような振り返りの文章に\n・最後の1〜2文は、その月の経験を踏まえた前向きな助言や励ましの言葉で締めくくる（押しつけがましくなく、その人の言葉や状況に寄り添った自然なトーンで）`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '（要約を生成できませんでした）';
+    summaries[monthKey] = { text, generatedAt: new Date().toISOString() };
+    save('ms_summaries', summaries);
+    el.innerHTML = `<div class="furikaeri-body">${text}</div>`;
+  } catch(e) {
+    el.innerHTML = '<div class="furikaeri-body" style="color:var(--muted)">要約の生成に失敗しました。もう一度お試しください。</div>';
+  }
+}
+
+function toggleFurikaeriCard(monthKey) {
+  const card = document.getElementById(`furikaeri-card-${monthKey}`);
+  card.classList.toggle('open');
+}
+
+function renderFurikaeri() {
+  const el = document.getElementById('furikaeriContent');
+  const groups = groupJournalsByMonth();
+  const currentKey = getCurrentMonthKey();
+  const prevKey = getPrevMonthKey();
+
+  // Get all past months (not current month) that have journal entries
+  const pastMonths = Object.keys(groups)
+    .filter(k => k < currentKey)
+    .sort((a, b) => b.localeCompare(a)); // newest first
+
+  if (pastMonths.length === 0) {
+    el.innerHTML = `<div class="furikaeri-empty">まだふりかえりはありません。<br>ジャーナルを書き続けると、<br>翌月の月初めに要約が生成されます。</div>`;
+    return;
+  }
+
+  const canGenerate = isMonthStartPeriod();
+
+  let html = '<div class="furikaeri-list">';
+
+  pastMonths.forEach(key => {
+    const entries = groups[key];
+    const hasSummary = summaries[key];
+    const isPrevMonth = key === prevKey;
+    const entryCount = entries.length;
+
+    if (hasSummary) {
+      // Already summarized — show card
+      html += `
+        <div class="furikaeri-card" id="furikaeri-card-${key}">
+          <div class="furikaeri-header" onclick="toggleFurikaeriCard('${key}')">
+            <span class="furikaeri-month">${formatMonthLabel(key)}</span>
+            <span class="furikaeri-meta">${entryCount}件のエントリ</span>
+            <span class="furikaeri-chevron">▼</span>
+          </div>
+          <div id="summary-body-${key}">
+            <div class="furikaeri-body">${summaries[key].text}</div>
+          </div>
+        </div>`;
+    } else if (isPrevMonth && canGenerate) {
+      // Previous month, in generation window — show generate button
+      html += `
+        <div class="furikaeri-card" id="furikaeri-card-${key}">
+          <div class="furikaeri-header" onclick="toggleFurikaeriCard('${key}')">
+            <span class="furikaeri-month">${formatMonthLabel(key)}</span>
+            <span class="furikaeri-meta">${entryCount}件のエントリ</span>
+            <span class="furikaeri-chevron">▼</span>
+          </div>
+          <div id="summary-body-${key}">
+            <div class="furikaeri-body" style="display:flex;flex-direction:column;gap:12px;align-items:flex-start;">
+              <span style="color:var(--muted);font-size:13px;">${formatMonthLabel(key)}のジャーナルをまとめます。</span>
+              <button class="btn" onclick="generateSummary('${key}', ${JSON.stringify(entries).replace(/</g,'&lt;').replace(/"/g,'&quot;')})">✦ 要約を生成する</button>
+            </div>
+          </div>
+        </div>`;
+    } else if (!hasSummary) {
+      // Older month without summary — show "not yet" state
+      html += `
+        <div class="furikaeri-not-yet">
+          <strong>${formatMonthLabel(key)}</strong>
+          ${entryCount}件のエントリ — 要約は月末後の月初めに生成できます
+        </div>`;
+    }
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ── Init ───────────────────────────────────────────────
+setHeaderDate();
+renderEvents();
+renderMemos();
+renderSidebar();
+
+// Set today's date as default for event input
+document.getElementById('evDate').value = new Date().toISOString().slice(0,10);
+</script>
+</body>
+</html>
